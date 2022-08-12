@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Sim</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+    <script src="Players.js"></script>
+    <script src="MyGameObjects.js"></script>
+    <script src="Zones.js"></script>
+    <script src="Animals.js"></script>
+    <script src="Consumables.js"></script>
+    <script src="Constructable.js"></script>
+    <script src="Pathing.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+    
+var config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update,
+        //render: render
+    }
+};
+
+
+var game = new Phaser.Game(config);
+var showDebug = true;
+var score = 0;
+var scoreText;
+var players;
+var trees;
+var foods;
+var seeds;
+var woods;
+var collectionZones;
+var propertyZones;
+var constructables;
+var pathNodes;
+var groupsMap;
+var randDist = 30;
+var globalScene;
+var graphics
+function preload ()
+{
+    this.load.image('sky', 'assets/sky.png');
+    this.load.image('ball', 'assets/bomb.png');
+    this.load.image('tree', 'assets/tree.png');
+    this.load.image('seed', 'assets/seed.png');
+    this.load.image('wood', 'assets/wood.png');
+    this.load.image('plant', 'assets/plant.png');
+    this.load.image('cow', 'assets/cow.png');
+    this.load.image('meat', 'assets/meat.png');
+    this.load.image('fence', 'assets/fence.png');
+    this.load.image('fenceV', 'assets/fenceV.png');
+    this.load.image('fenceH', 'assets/fenceH.png');
+    this.load.image('mineShaft', 'assets/mineShaft.png');
+    
+
+    
+    this.load.image('collectionZone', 'assets/collectionZone.png');
+    //this.load.image('platform', 'assets/platform2.png');
+}
+
+
+
+
+
+
+function create ()
+{
+    globalScene = game.scene.scenes[0];
+    //  A simple background for our game
+    this.add.image(400, 300, 'sky');
+    groupsMap = new Map()
+
+    let numberOfPlayers = 3;
+    players = this.physics.add.group();
+    groupsMap.set('Player',players);
+    for(let i=0;i<numberOfPlayers;i++){
+        //ids start at 1 because 0 is falsey and isReservedBy uses ids
+        new Player(this, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
+    }
+    
+    
+    trees = this.physics.add.group();
+    groupsMap.set('Tree',trees);
+    new Tree(this,100,100,'tree');
+    
+    let numberOfTrees = 10;
+    for(let i=0;i<numberOfTrees;i++){
+        new Tree(this,Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),'tree');
+    }
+    woods = this.physics.add.group();
+    groupsMap.set('Wood',woods);
+    
+    seeds = this.physics.add.group();
+    groupsMap.set('Seed',seeds);
+    new Seed(this,150,150,'seed');
+    
+    propertyZones = this.physics.add.group();
+    groupsMap.set('PropertyZone',propertyZones);
+    new PropertyZone(this,100,100,70,70,1);
+    //players.getChildren()[0].reservedInventory = ['Seed'];
+
+    collectionZones = this.physics.add.group();
+    groupsMap.set('CollectionZone',collectionZones);
+    new CollectionZone(this,300,300,28 ,28);
+    
+    
+    new FencedZone(this,500,500,42,42,2);
+
+    
+    animals = this.physics.add.group();
+    groupsMap.set('Animal',animals);
+    new Animal(this,400,400,'cow');
+
+    constructables = this.physics.add.group();
+    groupsMap.set('Constructable',constructables);
+    //trees.getChildren()[0].addSeed();
+    
+    pathNodes = this.physics.add.group();
+    groupsMap.set('PathNodes',pathNodes);
+    //Make a fence line
+    
+    /*
+    for(let i=150;i<400;i+=14){
+        let tempFence = new Fence(globalScene, 350, i, 'fence', 3)
+    }*/
+    //let tempFence = new Fence(globalScene, 300, 300, 'fence', 3);
+
+    //make mineShaft a constructable so that players have to walk around it.
+    new mineShaft(this, 400, 100, 'mineShaft', 3);
+
+            
+}
+
+function update ()
+{
+    players.children.iterate(function (player) {
+        
+        if(player.curActionFunctions.length == 0){
+            player.chooseAction();
+        }
+        
+        player.followText.setPosition(player.x,player.y);
+        player.followText.setText(player.curActions.join());
+    });
+    animals.children.iterate(function (animal){
+        if(animal.curActionFunctions.length == 0){
+            animal.chooseAction();
+        }
+    })
+
+}
+
+
+
+
+</script>
+
+</body>
+</html>

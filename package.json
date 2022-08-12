@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "express": "^4.17.3",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "node": "^17.4.0",
+    "phaser": "^3.55.2"
+  }
+
+}
