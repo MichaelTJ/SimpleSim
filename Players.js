@@ -181,7 +181,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             let constructArray = jobArray[1].split(",");
             if(constructArray[1]== "Fence"){
                 this.addToActions("Constructing " + constructArray[1], 
-                () => this.constructObject(jobArray[1], jobArray[2]));
+                () => this.constructObject(constructArray[1], jobArray[2]));
             }
         }
     }
@@ -376,9 +376,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         if(this.isObjectClose(dropSpot)){
             //All this to check if the dropSpot has the required materials
             //Effectively remove them if it does.
-            //tempObject to get requirements
             let itemReqs = [];
-            construcatableReqs.some(item => {
+            constructableReqs.some(item => {
                 if(item.name==objectType){
                     itemReqs=item.reqs;
                     return true;

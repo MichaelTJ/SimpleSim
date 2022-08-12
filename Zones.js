@@ -233,7 +233,13 @@ class InventorySpot extends Zone{
     }
     
     addConstructable(type){
-        if(type=='construct,Fence'){
+        constructableReqs.some(item => {
+            if(item.name==type){
+                
+                item.class([globalScene,this.x, this.y, '',this.owner]);
+            }
+        })
+        if(type=='Fence'){
             this.addFence();
         }
     }
@@ -266,7 +272,7 @@ class InventorySpot extends Zone{
         array.forEach((v) => (v.constructor.name === value && count++));
         return count;
     }
-
+    
 }
 class CollectionZone extends Zone{
     constructor(scene, x, y, width, height){

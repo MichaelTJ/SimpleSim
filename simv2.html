@@ -124,7 +124,7 @@ function create ()
     new CollectionZone(this,300,300,28 ,28);
     
     
-    new FencedZone(this,500,500,42,42,2);
+    new FencedZone(this,500,500,14,14,2);
 
     
     animals = this.physics.add.group();
@@ -146,7 +146,7 @@ function create ()
     //let tempFence = new Fence(globalScene, 300, 300, 'fence', 3);
 
     //make mineShaft a constructable so that players have to walk around it.
-    new mineShaft(this, 400, 100, 'mineShaft', 3);
+    new MineShaft(this, 400, 100, 'mineShaft', 3);
 
             
 }
