@@ -44,7 +44,8 @@ class Constructable extends MyGameObjects{
 
 //used so that you don't have to create an instance of a fence
 //to get the requirements. TODO: Should make a pre-built sprite instead?
-constructableReqs.push({name:"Fence", reqs:[[1,'Wood']], class: (params)=>{new Fence(params)}});
+constructableReqs.push({name:"Fence", reqs:[[1,'Wood']], 
+class: (scene, x, y, sprite, owner)=>{new Fence(scene, x, y, sprite, owner)}});
 class Fence extends Constructable{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
@@ -52,10 +53,11 @@ class Fence extends Constructable{
     }
 }
 
-constructableReqs.push({name:"MineShaft", reqs:[[10,"Wood"]]});
+constructableReqs.push({name:"MineShaft", reqs:[[10,"Wood"]], 
+class: (scene, x, y, sprite, owner)=>{new MineShaft(scene, x, y, sprite, owner)}});
 class MineShaft extends Constructable{
     constructor(scene, x, y, sprite, owner=''){
-        //sprite = 'mineShaft';
+        let sprite = 'mineShaft';
         super(scene, x, y, sprite, owner);
     }
 }

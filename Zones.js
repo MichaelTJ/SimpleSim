@@ -233,14 +233,21 @@ class InventorySpot extends Zone{
     }
     
     addConstructable(type){
-        constructableReqs.some(item => {
-            if(item.name==type){
-                
-                item.class([globalScene,this.x, this.y, '',this.owner]);
-            }
-        })
+        
         if(type=='Fence'){
             this.addFence();
+        }
+        else{
+            constructableReqs.some(item => {
+                if(item.name==type){
+                    
+                    item.class(globalScene,
+                        this.x,
+                        this.y,
+                        '',
+                        this.owner);
+                }
+            })
         }
     }
     addFence(){
