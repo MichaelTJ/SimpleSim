@@ -1,3 +1,4 @@
+var pathNodes;
 class PathNode extends Phaser.Physics.Arcade.Sprite{
     constructor(scene, x, y, parent) {
         super(scene, x, y);

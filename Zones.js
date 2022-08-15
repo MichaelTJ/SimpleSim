@@ -281,6 +281,8 @@ class InventorySpot extends Zone{
     }
     
 }
+
+var collectionZones;
 class CollectionZone extends Zone{
     constructor(scene, x, y, width, height){
         super(scene, x, y, width, height,'collectionZone');
@@ -298,6 +300,8 @@ class CollectionZone extends Zone{
     }
 }
 
+
+var propertyZones;
 class PropertyZone extends Zone{
     constructor(scene, x, y, width, height,id){
         super(scene, x, y, width, height,'collectionZone',id);

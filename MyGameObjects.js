@@ -45,6 +45,7 @@ class MyGameObjects extends Phaser.Physics.Arcade.Sprite{
     }
 }
 
+var trees;
 class Tree extends MyGameObjects{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
@@ -99,6 +100,7 @@ class Tree extends MyGameObjects{
     }
 }
 
+var woods;
 class Wood extends MyGameObjects{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
@@ -116,6 +118,7 @@ class Wood extends MyGameObjects{
     }
 }
 
+var seeds;
 class Seed extends MyGameObjects{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);

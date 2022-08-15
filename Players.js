@@ -470,7 +470,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         //need to set target 
         let newTarget = globalScene.physics.add.sprite(target.x, target.y, "");
         //make invisible.
-        newTarget.setScale(0.2);
+        if(showDebug){
+            newTarget.setScale(0.2);}
+        else{
+            newTarget.setScale(0);
+        }
         let collider = globalScene.physics.add.overlap(this, newTarget, function (player)
         {
             if(this!=player){

@@ -1,4 +1,6 @@
 var constructableReqs = [];
+
+var constructables;
 class Constructable extends MyGameObjects{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
@@ -57,7 +59,7 @@ constructableReqs.push({name:"MineShaft", reqs:[[10,"Wood"]],
 class: (scene, x, y, sprite, owner)=>{new MineShaft(scene, x, y, sprite, owner)}});
 class MineShaft extends Constructable{
     constructor(scene, x, y, sprite, owner=''){
-        let sprite = 'mineShaft';
+        //sprite = 'mineShaft';
         super(scene, x, y, sprite, owner);
     }
 }
