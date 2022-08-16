@@ -55,11 +55,12 @@ class Fence extends Constructable{
     }
 }
 
-constructableReqs.push({name:"MineShaft", reqs:[[2,"Wood"]], 
+constructableReqs.push({name:"MineShaft", reqs:[[6,"Wood"]], 
 class: (scene, x, y, sprite, owner)=>{new MineShaft(scene, x, y, sprite, owner)}});
 class MineShaft extends Constructable{
     constructor(scene, x, y, sprite, owner=''){
         sprite = 'mineShaft';
+        //offset because sprite is 28x28
         x = x+7
         y = y+7
         //sprite = 'mineShaft';

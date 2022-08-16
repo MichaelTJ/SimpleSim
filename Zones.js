@@ -123,9 +123,8 @@ class InventorySpot extends Zone{
                 return [this.inventory,'construct,Fence',this];
             }
         }
-        if(this.owner==3){
-            console.log('asdf');
-        }
+        //TODO: refactor this into objects
+        //  started in next if-statement {any}.length=0 
         if(this.plan.length>0){
             
             if(this.plan[1]=='Grow1'){
@@ -176,6 +175,7 @@ class InventorySpot extends Zone{
                 //first item is count, second is material constructor name
                 for(let j=0;j<itemReqs[i][0];j++){
                     let hasMaterial = false;
+                    //Go through each item in inventory for matching materials
                     for(let k=0;k<inventoryCopy.length;k++){
                         if(inventoryCopy[k].constructor.name==itemReqs[i][1]){
                             //console.log(inventoryCopy[k].constructor.name, tempFence[i][1])
@@ -186,7 +186,7 @@ class InventorySpot extends Zone{
                         }
                     }
                     if(!hasMaterial){
-                        return ['Wood','find,pickup,dropoff',this];
+                        return [itemReqs[i][1],'find,pickup,dropoff',this];
                     }
                 }
                 return [this.inventory,'construct,'+this.plan.constructable,this];
@@ -354,7 +354,9 @@ class PropertyZone extends Zone{
     //create the layout for the property
     createPlan(id,weightings){
         if('mining' in weightings){
+            //TODO check size of PropertyZone
             this.inventory[0][0].plan.constructable = "MineShaft";
+            
         }
         else{
             for(var i=0;i<this.inventory.length;i++){
