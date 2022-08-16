@@ -123,7 +123,11 @@ class InventorySpot extends Zone{
                 return [this.inventory,'construct,Fence',this];
             }
         }
+        if(this.owner==3){
+            console.log('asdf');
+        }
         if(this.plan.length>0){
+            
             if(this.plan[1]=='Grow1'){
                 //if it's empty drop seed
                 if(this.inventory.length==0){
@@ -154,6 +158,40 @@ class InventorySpot extends Zone{
 
             }
             //else if(this.plan[1]==)
+        }
+        else if(this.plan.constructable){
+            let itemReqs = [];
+            //TODO Wet (from player) 
+            //Make constructableReqs dictionary instead
+            constructableReqs.some(item => {
+                if(item.name==this.plan.constructable){
+                    itemReqs=item.reqs;
+                    return true;
+                }
+            });
+            let inventoryCopy = [...this.inventory];
+            let removed = []
+            //for each material
+            for(let i=0;i<itemReqs.length;i++){
+                //first item is count, second is material constructor name
+                for(let j=0;j<itemReqs[i][0];j++){
+                    let hasMaterial = false;
+                    for(let k=0;k<inventoryCopy.length;k++){
+                        if(inventoryCopy[k].constructor.name==itemReqs[i][1]){
+                            //console.log(inventoryCopy[k].constructor.name, tempFence[i][1])
+                            let removedElem = inventoryCopy.splice(k,1);
+                            removed.push(removedElem[0]);
+                            hasMaterial = true;
+                            break;
+                        }
+                    }
+                    if(!hasMaterial){
+                        return ['Wood','find,pickup,dropoff',this];
+                    }
+                }
+                return [this.inventory,'construct,'+this.plan.constructable,this];
+            
+            }
         }
         return false;
     }
@@ -248,6 +286,8 @@ class InventorySpot extends Zone{
                         this.owner);
                 }
             })
+            this.hasPlan = false;
+            this.plan = {};
         }
     }
     addFence(){
@@ -303,37 +343,42 @@ class CollectionZone extends Zone{
 
 var propertyZones;
 class PropertyZone extends Zone{
-    constructor(scene, x, y, width, height,id){
+    constructor(scene, x, y, width, height,id,weightings={}){
         super(scene, x, y, width, height,'collectionZone',id);
         this.setOwner(id);
         //this.createPlan(id);
-        this.hasPlan = '';
+        this.hasPlan = false;
         propertyZones.add(globalScene.physics.add.existing(this));
-        this.createPlan(id);
+        this.createPlan(id,weightings);
     }
     //create the layout for the property
-    createPlan(id){
-        this.hasPlan = true;
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
-                //bottom row is collection.
-                if(j==this.inventory[i].length-1){
-                    this.inventory[i][j].plan = ['', "collect"]
-                }
-                else if(i==1 && j==1){
-                    this.inventory[i][j].plan = ['Seed', 'Grow0'];
-                }
-                else if(i%4==0 && j%4==0){
-                    this.inventory[i][j].plan = ['Seed', 'Grow1'];
-                }
-                else if(i%2==0 && j%2==0){
-                    this.inventory[i][j].plan = ['Seed', 'Grow1'];
-                }
-                else{
-                    this.inventory[i][j].plan = ['Seed', 'Grow1'];
+    createPlan(id,weightings){
+        if('mining' in weightings){
+            this.inventory[0][0].plan.constructable = "MineShaft";
+        }
+        else{
+            for(var i=0;i<this.inventory.length;i++){
+                for(var j=0;j<this.inventory[i].length;j++){
+                    //bottom row is collection.
+                    if(j==this.inventory[i].length-1){
+                        this.inventory[i][j].plan = ['', "collect"]
+                    }
+                    else if(i==1 && j==1){
+                        this.inventory[i][j].plan = ['Seed', 'Grow0'];
+                    }
+                    else if(i%4==0 && j%4==0){
+                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                    }
+                    else if(i%2==0 && j%2==0){
+                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                    }
+                    else{
+                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                    }
                 }
             }
         }
+        this.hasPlan = true;
     }
 
 }
@@ -374,22 +419,6 @@ class FencedZone extends Zone{
     }
 }
 
-class MineZone extends Zone{
-    constructor(scene, x, y, width, height,id){
-        super(scene, x, y, width, height,'collectionZone',id);
-        this.setOwner(id);
-        this.hasPlan = '';
-        propertyZones.add(globalScene.physics.add.existing(this));
-        this.createPlan(id);
-    }
-    //create the layout for the property
-    createPlan(id){
-        this.hasPlan = true;
-        if(this.width>28 && this.height>28){
-            this.inventory[i][j].plan = ['', "collect"];
-        }
-    }
-}
 
 
 

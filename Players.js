@@ -183,6 +183,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                 this.addToActions("Constructing " + constructArray[1], 
                 () => this.constructObject(constructArray[1], jobArray[2]));
             }
+            else{
+                this.addToActions("Constructing " + constructArray[1], 
+                () => this.constructObject(constructArray[1], jobArray[2]));
+            }
         }
     }
 
