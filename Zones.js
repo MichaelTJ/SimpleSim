@@ -125,11 +125,20 @@ class SubZone extends Zone{
         if(this.invPlan.job){
             if(this.inventory.length==0){
                 this.invPlan = {};
-                
             }
             else{
                 if(this.invPlan.job=="interact"){
-                    return [this.inventory[0],'plant',this];
+                    if(this.invPlan.type=='plant'){
+                        return [this.inventory[0],'plant',this];
+                    }
+                    else if(this.invPlan.type=='mining'){
+                        return false;
+                        //TODO: next
+                        /*
+                        return {gameObj:this.inventory[0],
+                        type:'mining',
+                        subZone:this}*/
+                    }
                 }
                 else if(this.invPlan.job=='destroy'){
                     return [this.inventory[0],'Destroy',this];
@@ -152,63 +161,42 @@ class SubZone extends Zone{
                 //else if need multiple
                 //else destroy stuff
             }
-            //if it has a seed, plant it
-            if(this.plan.job=='interact'){
-                if(this.inventory.length>0){
-                    if(this.inventory[0].constructor.name=='Seed'){
-                        if(!this.inventory[0].isPlanted){
-                            return [this.inventory[0],'plant',this];
+            else if(this.plan.job=='construct'){
+                let itemReqs = [];
+                //TODO Wet (from player) 
+                //Make constructableReqs dictionary instead
+                constructableReqs.some(item => {
+                    if(item.name==this.plan.type){
+                        itemReqs=item.reqs;
+                        return true;
+                    }
+                });
+                let inventoryCopy = [...this.inventory];
+                let removed = []
+                //for each material
+                for(let i=0;i<itemReqs.length;i++){
+                    //first item is count, second is material constructor name
+                    for(let j=0;j<itemReqs[i][0];j++){
+                        let hasMaterial = false;
+                        //Go through each item in inventory for matching materials
+                        for(let k=0;k<inventoryCopy.length;k++){
+                            if(inventoryCopy[k].constructor.name==itemReqs[i][1]){
+                                //console.log(inventoryCopy[k].constructor.name, tempFence[i][1])
+                                let removedElem = inventoryCopy.splice(k,1);
+                                removed.push(removedElem[0]);
+                                hasMaterial = true;
+                                break;
+                            }
+                        }
+                        if(!hasMaterial){
+                            return [itemReqs[i][1],'find,pickup,dropoff',this];
                         }
                     }
-                    if(this.inventory[0].constructor.name=='Tree'){
-                        return [this.inventory[0],'Destroy',this];
-                    }
+                    return [this.inventory,'construct,'+this.plan.type,this];
+                
                 }
-
-            }
-            
-        }
-        else if(this.plan.constructable){
-            let itemReqs = [];
-            //TODO Wet (from player) 
-            //Make constructableReqs dictionary instead
-            constructableReqs.some(item => {
-                if(item.name==this.plan.constructable){
-                    itemReqs=item.reqs;
-                    return true;
-                }
-            });
-            let inventoryCopy = [...this.inventory];
-            let removed = []
-            //for each material
-            for(let i=0;i<itemReqs.length;i++){
-                //first item is count, second is material constructor name
-                for(let j=0;j<itemReqs[i][0];j++){
-                    let hasMaterial = false;
-                    //Go through each item in inventory for matching materials
-                    for(let k=0;k<inventoryCopy.length;k++){
-                        if(inventoryCopy[k].constructor.name==itemReqs[i][1]){
-                            //console.log(inventoryCopy[k].constructor.name, tempFence[i][1])
-                            let removedElem = inventoryCopy.splice(k,1);
-                            removed.push(removedElem[0]);
-                            hasMaterial = true;
-                            break;
-                        }
-                    }
-                    if(!hasMaterial){
-                        return [itemReqs[i][1],'find,pickup,dropoff',this];
-                    }
-                }
-                return [this.inventory,'construct,'+this.plan.constructable,this];
-            
             }
         }
-        /*
-        else if(this.plan.mineable){
-            return {jobType:'mine', 
-            interactObject:this.inventory[0],
-            , }
-        }*/
         return false;
     }
     canDrop(myObject){
@@ -318,8 +306,8 @@ class SubZone extends Zone{
                             this.owner);
                 }
             })
-            this.invPlan = newConstruct.getNeed();
             this.inventory.push(newConstruct);
+            this.invPlan = newConstruct.getNeed();
         }
     }
     addFence(){
