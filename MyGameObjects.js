@@ -128,6 +128,25 @@ class Wood extends MyGameObjects{
     }
 }
 
+var ores;
+class Ores extends MyGameObjects{
+    constructor(scene, x, y, sprite, owner=''){
+        sprite = 'ore';
+        super(scene, x, y, sprite, owner);
+        this.isPickupable = true;
+        this.isStackable = true;
+        ores.add(globalScene.physics.add.existing(this));
+    }
+    selfDestruct(){
+        super.selfDestruct();
+        var index = ores.getChildren().indexOf(this);
+        if (index > -1) {
+            ores.getChildren().splice(index, 1); 
+        }
+        this.destroy();
+    }
+} 
+
 var seeds;
 class Seed extends MyGameObjects{
     constructor(scene, x, y, sprite, owner=''){

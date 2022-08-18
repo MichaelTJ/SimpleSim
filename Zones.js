@@ -261,6 +261,7 @@ class SubZone extends Zone{
     }
     updatePlan(invPlan={}){
         if(this.plan.job=='getObj'){
+            //check if I've gotten the obj
             if(this.inventory.length>0){
                 //if plant seed check it
                 if(this.inventory[0].constructor.name==this.plan.type){
