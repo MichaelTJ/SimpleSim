@@ -364,7 +364,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         if(this.isObjectClose(myObject)){
             myObject.owner = this;
             //remove from inventory
-            myObject.plant();
+            myObject.interact('Plant');
             //add to dropspot
             
         }

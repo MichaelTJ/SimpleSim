@@ -60,6 +60,15 @@ class Tree extends MyGameObjects{
         this.firstSeedTimer = globalScene.time.addEvent({ delay: this.maxSeedSpawnTime, callback: this.changeIsDestroyable, callbackScope: this});
     }
 
+    getPlan(){
+        return{
+            job:'destroy',
+            //workAmount:5
+            //Creates:[3,'Wood']
+            planOnComplete:'getObj'}
+        
+    }
+
     addSeedSpawner(){
             //newObject.x += Phaser.Math.Between(-this.spawnRadius, this.spawnRadius);
             //newObject.y += Phaser.Math.Between(-this.spawnRadius, this.spawnRadius);
@@ -75,6 +84,7 @@ class Tree extends MyGameObjects{
     }
     changeIsDestroyable(){
         this.isDestroyable = true;
+        
         this.firstSeedTimer.remove();
         this.firstSeedTimer.destroy();
     }
@@ -130,19 +140,38 @@ class Seed extends MyGameObjects{
         this.becomeTreeTimer;
         seeds.add(globalScene.physics.add.existing(this));
     }
-    plant(){
-        this.isPlanted = true;
-        this.setTexture('plant');
-        let delayInt = Phaser.Math.Between(this.minTime,this.maxTime);
-        this.becomeTreeTimer = globalScene.time.addEvent({ 
-            delay: delayInt, 
-            callback: this.becomeTree, 
-            callbackScope: this,
-            loop: false});
+    getPlan(){
+        //if planted, wait to grow
+        if(this.isPlanted){
+            return {}
+        }
+        else{
+            return {
+                job:'interact', 
+                type:'Plant',
+                //Tree create will update the subZone plan
+                planOnComplete:''}
+        }
+    }
+    interact(type){
+        if(type=='Plant'){
+            this.isPlanted = true;
+            this.parent.updatePlan({});
+            this.setTexture('plant');
+            let delayInt = Phaser.Math.Between(this.minTime,this.maxTime);
+            this.becomeTreeTimer = globalScene.time.addEvent({ 
+                delay: delayInt, 
+                callback: this.becomeTree, 
+                callbackScope: this,
+                loop: false});
+        }
+        else if(type=='Destroy'){
+            this.selfDestruct();
+        }
 
     }
     becomeTree(){
-        //TODO fix this?
+        //TODO fix this? Errors with overlaps?
         if(this.becomeTreeTimer!=undefined){
             this.becomeTreeTimer.remove();
             this.becomeTreeTimer.destroy();
@@ -159,16 +188,19 @@ class Seed extends MyGameObjects{
         let newTree = new Tree(curScene,this.x, this.y,'tree', this.owner);
         newTree.parent = this.parent;
         newTree.parent.inventory.push(newTree);
+        newTree.parent.updatePlan(newTree.getPlan());
         newTree.isReservedBy = "";
         newTree.isDestroyable = false;
 
-        
-        //remove from inventory
+        this.selfDestruct();
+    }
+    
+    selfDestruct(){
+        super.selfDestruct();
         var index = seeds.getChildren().indexOf(this);
         if (index > -1) {
-            seeds.getChildren().splice(index, 1); 
+            woods.getChildren().splice(index, 1); 
         }
-        super.selfDestruct();
         this.destroy();
     }
 }

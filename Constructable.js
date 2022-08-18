@@ -55,8 +55,8 @@ class Fence extends Constructable{
     }
 }
 
-constructableReqs.push({name:"MineShaft", reqs:[[6,"Wood"]], 
-class: (scene, x, y, sprite, owner)=>{new MineShaft(scene, x, y, sprite, owner)}});
+constructableReqs.push({name:"MineShaft", reqs:[[1,"Wood"]], 
+class: (scene, x, y, sprite, owner)=>{return new MineShaft(scene, x, y, sprite, owner)}});
 class MineShaft extends Constructable{
     constructor(scene, x, y, sprite, owner=''){
         sprite = 'mineShaft';
@@ -65,5 +65,11 @@ class MineShaft extends Constructable{
         y = y+7
         //sprite = 'mineShaft';
         super(scene, x, y, sprite, owner);
+        
     }
+
+    getNeed(){
+        return {mineable:true};
+    }
+
 }

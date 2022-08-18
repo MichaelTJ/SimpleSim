@@ -8,21 +8,21 @@ class Zone extends Phaser.Physics.Arcade.Sprite {
         this.isPickupable = false;
         this.isReservedBy = false;
         this.parent = "";
-        this.inventory = [];
+        this.subZones = [];
         this.owner = '';
-        this.createInventory();
+        this.createSubZones();
         //collectionZones.add(globalScene.physics.add.existing(this));
     }
-    //create array of inventorySpots
-    createInventory(){
-        this.inventory = [];
+    //create array of subZonesSpots
+    createSubZones(){
+        this.subZones = [];
         //2D array of 14px boxes
         for(var i=0;i<(this.displayWidth);i+=14){
-            this.inventory.push([]);
+            this.subZones.push([]);
             for(var j=0;j<(this.displayHeight);j+=14){
                 let [x,y] = this.convertIJToXY(i/14,j/14);
-                this.inventory[i/14].push(
-                    new InventorySpot(globalScene,
+                this.subZones[i/14].push(
+                    new SubZone(globalScene,
                         x,y,
                         i,j,this));
             }
@@ -31,10 +31,10 @@ class Zone extends Phaser.Physics.Arcade.Sprite {
     //returns the drop location
     getDropSpot(myObject){
         //2D array of 14px boxes
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
-                if(this.inventory[i][j].canDrop(myObject)){
-                    return this.inventory[i][j];
+        for(var i=0;i<this.subZones.length;i++){
+            for(var j=0;j<this.subZones[i].length;j++){
+                if(this.subZones[i][j].canDrop(myObject)){
+                    return this.subZones[i][j];
                 }
             }
         }
@@ -44,9 +44,9 @@ class Zone extends Phaser.Physics.Arcade.Sprite {
     //[object, verb, dropspot]
     getNeeds(){
         let needsAsJobs = []
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
-                let tempNeed = this.inventory[i][j].hasNeed();
+        for(var i=0;i<this.subZones.length;i++){
+            for(var j=0;j<this.subZones[i].length;j++){
+                let tempNeed = this.subZones[i][j].hasNeed();
                 if(tempNeed){
                     needsAsJobs.push(tempNeed)
                 }
@@ -55,9 +55,9 @@ class Zone extends Phaser.Physics.Arcade.Sprite {
         return needsAsJobs;
     }
     isFull(){
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
-                if(this.inventory[i][j].isEmpty()){
+        for(var i=0;i<this.subZones.length;i++){
+            for(var j=0;j<this.subZones[i].length;j++){
+                if(this.subZones[i][j].isEmpty()){
                     return false;
                 }
             }
@@ -74,22 +74,17 @@ class Zone extends Phaser.Physics.Arcade.Sprite {
         var y = j*14+this.y-this.displayHeight/2+7;
         return [x,y];
     }
-    createDummy(name){
-        var object = {};
-        object.constructor = {}
-        object.constructor.name = name;
-        return object;
-    }
     setOwner(id){
         //console.log(id);
         if(!this.owner){
             this.owner = id;
+            //players are id'd starting from 1 to avoid falsey 0
             players.getChildren()[id-1].propertyZones.push(this);
         }
     }
     
 }
-class InventorySpot extends Zone{
+class SubZone extends Zone{
     constructor(scene, x, y, i, j, parent){
         super(scene, x, y, 0,0,'collectionZone');
         this.i = i;
@@ -98,6 +93,7 @@ class InventorySpot extends Zone{
         this.inventory = [];
         this.parent = parent;
         this.plan = [];
+        this.invPlan = {};
         this.isFulfilled = false;
         this.fenceReq = [];
         this.fences = [];
@@ -116,6 +112,7 @@ class InventorySpot extends Zone{
         let nextFenceType = this.getNextFenceType();
         if(typeof nextFenceType == 'number'){
             //if it's empty drop wood
+            //TODO: change so '2' matches requirements instead
             if(this.getTypeOccurrence(this.inventory,'Wood')<2){
                 return ['Wood','find,pickup,dropoff',this];
             }
@@ -125,38 +122,51 @@ class InventorySpot extends Zone{
         }
         //TODO: refactor this into objects
         //  started in next if-statement {any}.length=0 
-        if(this.plan.length>0){
-            
-            if(this.plan[1]=='Grow1'){
-                //if it's empty drop seed
-                if(this.inventory.length==0){
-                    return [this.plan[0],'find,pickup,dropoff',this];
-                }
-                //if it has a seed, plant it
-                if(this.inventory[0].constructor.name=='Seed'){
-                    if(!this.inventory[0].isPlanted){
-                        return [this.inventory[0],'plant',this];
-                    }
-                }
-                if(this.inventory[0].constructor.name=='Tree'){
-                    return [this.inventory[0],'Destroy',this];
-                }
+        if(this.invPlan.job){
+            if(this.inventory.length==0){
+                this.invPlan = {};
                 
             }
-            else if(this.plan[1]=='Grow0'){
+            else{
+                if(this.invPlan.job=="interact"){
+                    return [this.inventory[0],'plant',this];
+                }
+                else if(this.invPlan.job=='destroy'){
+                    return [this.inventory[0],'Destroy',this];
+                }
+            }
+        }
+        if(this.plan.job){
+
+            if(this.plan.job=='getObj'){
                 //if it's empty drop seed
                 if(this.inventory.length==0){
-                    return [this.plan[0],'find,pickup,dropoff',this];
+                    return [this.plan.type,'find,pickup,dropoff',this];
                 }
-                //if it has a seed, plant it
-                if(this.inventory[0].constructor.name=='Seed'){
-                    if(!this.inventory[0].isPlanted){
-                        return [this.inventory[0],'plant',this];
+                else if(this.inventory[0].constructor.name==this.plan.type){
+                    if(this.plan.planOnComplete=='checkObj'){
+                        this.invPlan=this.inventory[0].getPlan();
+
+                    }
+                }
+                //else if need multiple
+                //else destroy stuff
+            }
+            //if it has a seed, plant it
+            if(this.plan.job=='interact'){
+                if(this.inventory.length>0){
+                    if(this.inventory[0].constructor.name=='Seed'){
+                        if(!this.inventory[0].isPlanted){
+                            return [this.inventory[0],'plant',this];
+                        }
+                    }
+                    if(this.inventory[0].constructor.name=='Tree'){
+                        return [this.inventory[0],'Destroy',this];
                     }
                 }
 
             }
-            //else if(this.plan[1]==)
+            
         }
         else if(this.plan.constructable){
             let itemReqs = [];
@@ -193,25 +203,32 @@ class InventorySpot extends Zone{
             
             }
         }
+        /*
+        else if(this.plan.mineable){
+            return {jobType:'mine', 
+            interactObject:this.inventory[0],
+            , }
+        }*/
         return false;
     }
-
     canDrop(myObject){
-        if(this.plan.length>0){
-            if(this.plan[1]=='collect'){
+        if(this.plan.job){
+            if(this.plan.job=='store'){
                 return this.checkCollect(myObject);
             }
         }
         else{
             //If there's no plan, make it a collection spot
-            this.plan=[myObject.constructor.name,'collect'];
+            this.plan={job:'collect',type:myObject.constructor.name};
+            return this.checkCollect(myObject);
+            /*
             if(this.checkCollect(myObject)){
                 return true;
             }
             else{
                 this.plan = [];
                 return false;
-            }
+            }*/
         }
         
     }
@@ -248,11 +265,26 @@ class InventorySpot extends Zone{
         dropable.y = dropSpot.y;
         
         dropable.parent = this;
-        //dropable.parent = this.parent;
         dropable.isPickupable = true;
         dropable.isReservedBy = "";
         dropable.setVisible(true);
         dropable.alpha = 1;
+        this.updatePlan();
+    }
+    updatePlan(invPlan={}){
+        if(this.plan.job=='getObj'){
+            if(this.inventory.length>0){
+                //if plant seed check it
+                if(this.inventory[0].constructor.name==this.plan.type){
+                    if(this.plan.planOnComplete=='checkObj'){
+                        this.invPlan=this.inventory[0].getPlan();
+                    }
+                }
+            }
+        }
+        if(invPlan!={}){
+            this.invPlan=invPlan;
+        }
     }
     getNextFenceType(){
         for(let i=0;i<this.fenceReq.length;i++){
@@ -276,18 +308,18 @@ class InventorySpot extends Zone{
             this.addFence();
         }
         else{
+            let newConstruct = {};
             constructableReqs.some(item => {
                 if(item.name==type){
-                    
-                    item.class(globalScene,
-                        this.x,
-                        this.y,
-                        '',
-                        this.owner);
+                    newConstruct = item.class(globalScene,
+                            this.x,
+                            this.y,
+                            '',
+                            this.owner);
                 }
             })
-            this.hasPlan = false;
-            this.plan = {};
+            this.invPlan = newConstruct.getNeed();
+            this.inventory.push(newConstruct);
         }
     }
     addFence(){
@@ -331,10 +363,10 @@ class CollectionZone extends Zone{
     }
     createPlan(){
         this.hasPlan = true;
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
+        for(var i=0;i<this.subZones.length;i++){
+            for(var j=0;j<this.subZones[i].length;j++){
                 //collect anything
-                this.inventory[i][j].plan = ['', 'collect'];
+                this.subZones[i][j].plan = {job:'store', type:null};
             }
         }
     }
@@ -355,27 +387,43 @@ class PropertyZone extends Zone{
     createPlan(id,weightings){
         if('mining' in weightings){
             //TODO check size of PropertyZone
-            this.inventory[0][0].plan.constructable = "MineShaft";
+            this.subZones[0][0].plan = 
+            {job:'construct',type:"MineShaft"};
             
         }
         else{
-            for(var i=0;i<this.inventory.length;i++){
-                for(var j=0;j<this.inventory[i].length;j++){
+            for(var i=0;i<this.subZones.length;i++){
+                for(var j=0;j<this.subZones[i].length;j++){
                     //bottom row is collection.
-                    if(j==this.inventory[i].length-1){
-                        this.inventory[i][j].plan = ['', "collect"]
+                    if(j==this.subZones[i].length-1){
+                        this.subZones[i][j].plan = {job:'store',
+                        type:null}//['', "collect"]
                     }
                     else if(i==1 && j==1){
-                        this.inventory[i][j].plan = ['Seed', 'Grow0'];
+                        this.subZones[i][j].plan = 
+                        {job:'getObj', 
+                        type:'Seed',
+                        planOnComplete:''}
+                        //['Seed', 'Grow0'];
                     }
                     else if(i%4==0 && j%4==0){
-                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                        this.subZones[i][j].plan = 
+                        {job:'getObj', 
+                        type:'Seed',
+                        planOnComplete:'checkObj'}
+                        //['Seed', 'Grow1'];
                     }
                     else if(i%2==0 && j%2==0){
-                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                        this.subZones[i][j].plan = 
+                        {job:'getObj', 
+                        type:'Seed',
+                        planOnComplete:'checkObj'}
                     }
                     else{
-                        this.inventory[i][j].plan = ['Seed', 'Grow1'];
+                        this.subZones[i][j].plan = 
+                        {job:'getObj', 
+                        type:'Seed',
+                        planOnComplete:'checkObj'}
                     }
                 }
             }
@@ -396,25 +444,25 @@ class FencedZone extends Zone{
     //create the layout for the property
     createPlan(id){
         this.hasPlan = true;
-        for(var i=0;i<this.inventory.length;i++){
-            for(var j=0;j<this.inventory[i].length;j++){
+        for(var i=0;i<this.subZones.length;i++){
+            for(var j=0;j<this.subZones[i].length;j++){
                 //bottom row is collection.
-                if(j==this.inventory[i].length-1){
-                    this.inventory[i][j].plan = ['', "collect"];
-                    this.inventory[i][j].fenceReq.push(2);
+                if(j==this.subZones[i].length-1){
+                    this.subZones[i][j].plan = ['', "collect"];
+                    this.subZones[i][j].fenceReq.push(2);
                 }
                 
                 if(j==0){
-                    this.inventory[i][j].fenceReq.push(0);
+                    this.subZones[i][j].fenceReq.push(0);
                 }
                 if(i==0){
                     //keep a gap open
                     if(j!=0){
-                        this.inventory[i][j].fenceReq.push(3);
+                        this.subZones[i][j].fenceReq.push(3);
                     }
                 }
-                if(i==this.inventory.length-1){
-                    this.inventory[i][j].fenceReq.push(1);
+                if(i==this.subZones.length-1){
+                    this.subZones[i][j].fenceReq.push(1);
                 }
             }
         }
