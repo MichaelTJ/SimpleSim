@@ -82,7 +82,7 @@ function create ()
     this.add.image(400, 300, 'sky');
     groupsMap = new Map()
 
-    let numberOfPlayers = 3;
+    let numberOfPlayers = 1;
     players = this.physics.add.group();
     groupsMap.set('Player',players);
     for(let i=0;i<numberOfPlayers;i++){
@@ -108,15 +108,15 @@ function create ()
     
     propertyZones = this.physics.add.group();
     groupsMap.set('PropertyZone',propertyZones);
-    new PropertyZone(this,100,100,70,70,1);
+    new PropertyZone(this,100,100,28,28,1);
     //players.getChildren()[0].reservedInventory = ['Seed'];
 
     collectionZones = this.physics.add.group();
     groupsMap.set('CollectionZone',collectionZones);
-    new CollectionZone(this,300,300,28 ,28);
+    //new CollectionZone(this,300,300,28 ,28);
     
     
-    new FencedZone(this,500,500,14,14,2);
+    //new FencedZone(this,500,500,14,14,2);
 
     
     animals = this.physics.add.group();
@@ -138,7 +138,7 @@ function create ()
     //let tempFence = new Fence(globalScene, 300, 300, 'fence', 3);
 
     //mining property for player3
-    new PropertyZone(this,400,100,42,28,3,{mining:10});
+    //new PropertyZone(this,400,100,42,28,3,{mining:10});
 
             
 }
