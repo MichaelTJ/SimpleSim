@@ -114,10 +114,14 @@ class SubZone extends Zone{
             //if it's empty drop wood
             //TODO: change so '2' matches requirements instead
             if(this.getTypeOccurrence(this.inventory,'Wood')<2){
-                return ['Wood','find,pickup,dropoff',this];
+                return {type:'Wood',
+                instruction:'find,pickup,dropoff',
+                subZone:this};
             }
             else{
-                return [this.inventory,'construct,Fence',this];
+                return {subZoneInv:this.inventory,
+                    instruction:'construct,Fence',
+                    subZone:this};
             }
         }
         //TODO: refactor this into objects
@@ -129,7 +133,10 @@ class SubZone extends Zone{
             else{
                 if(this.invPlan.job=="interact"){
                     if(this.invPlan.type=='Plant'){
-                        return [this.inventory[0],'plant',this];
+                        return {
+                            gameObj:this.inventory[0],
+                            instruction:'plant',
+                            subZone:this};
                     }
                     else if(this.invPlan.type=='mining'){
                         return false;
@@ -141,7 +148,10 @@ class SubZone extends Zone{
                     }
                 }
                 else if(this.invPlan.job=='destroy'){
-                    return [this.inventory[0],'Destroy',this];
+                    return {
+                        gameObj:this.inventory[0],
+                        instruction:'Destroy',
+                        subZone:this};
                 }
             }
         }
@@ -150,7 +160,10 @@ class SubZone extends Zone{
             if(this.plan.job=='getObj'){
                 //if it's empty drop seed
                 if(this.inventory.length==0){
-                    return [this.plan.type,'find,pickup,dropoff',this];
+                    return {
+                        type:this.plan.type,
+                        instruction:'find,pickup,dropoff',
+                        subZone:this};
                 }
                 else if(this.inventory[0].constructor.name==this.plan.type){
                     if(this.plan.planOnComplete=='checkObj'){
@@ -189,10 +202,14 @@ class SubZone extends Zone{
                             }
                         }
                         if(!hasMaterial){
-                            return [itemReqs[i][1],'find,pickup,dropoff',this];
+                            return {type:itemReqs[i][1],
+                                instruction:'find,pickup,dropoff',
+                                subZone:this};
                         }
                     }
-                    return [this.inventory,'construct,'+this.plan.type,this];
+                    return {subZoneInv:this.inventory,
+                        instruction:'construct,'+this.plan.type,
+                        subZone:this};
                 
                 }
             }

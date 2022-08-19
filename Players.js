@@ -100,8 +100,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         //filter out 'find' jobs that don't have a matching object
         //TODO Double check
         for(let i=personalJobs.length-1;i>=0;i--){
-            if(personalJobs[i][1].split(",")[0]=="find"){
-                if(!this.findObject(personalJobs[i][0])){
+            if(personalJobs[i].instruction==undefined){
+                console.log('g');
+            }
+
+            if(personalJobs[i].instruction.split(",")[0]=="find"){
+                if(!this.findObject(personalJobs[i].type)){
                     personalJobs.splice(i, 1);
                 }
             }
@@ -138,55 +142,55 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    doJob(jobArray){
+    doJob(jobObj){
 
         //console.log(globalJobs);
-        if(jobArray[1] == "Pickup"){
-            jobArray[0].isReservedBy = this.id;
-            this.addToActions("Picking up "+jobArray[0].constructor.name, 
-                () => this.pickupObject(jobArray[0]));
+        if(jobObj.instruction == "Pickup"){
+            jobObj.gameObj.isReservedBy = this.id;
+            this.addToActions("Picking up "+jobObj.constructor.name, 
+                () => this.pickupObject(jobObj.gameObj));
         }
-        else if(jobArray[1] == "Destroy"){
-            jobArray[0].isReservedBy = this.id;
-            this.addToActions("Destroying "+jobArray[0].constructor.name, 
-                () => this.destroyObject(jobArray[0]));
+        else if(jobObj.instruction == "Destroy"){
+            jobObj.gameObj.isReservedBy = this.id;
+            this.addToActions("Destroying "+jobObj.gameObj.constructor.name, 
+                () => this.destroyObject(jobObj.gameObj));
         }
-        else if(jobArray[1] == "Dropoff"){
+        else if(jobObj.instruction == "Dropoff"){
             //reserve the dropspot by object
-            jobArray[2].isReservedBy = jobArray[0];
+            jobObj.subZone.isReservedBy = jobObj.gameObj;
             //reserve the inventory item
-            jobArray[0].isReservedBy = this.id;
-            this.addToActions("Dropping off "+jobArray[0].constructor.name, 
-                () => this.dropoffObject(jobArray[0], jobArray[2]));
+            jobObj.gameObj.isReservedBy = this.id;
+            this.addToActions("Dropping off "+jobObj.gameObj.constructor.name, 
+                () => this.dropoffObject(jobObj.gameObj, jobObj.subZone));
         }
-        else if(jobArray[1] == "find,pickup,dropoff"){
+        else if(jobObj.instruction == "find,pickup,dropoff"){
             
-            let myObject = this.findObject(jobArray[0]);
+            let myObject = this.findObject(jobObj.type);
             //console.log(myObject);asdf
             if(!myObject){return;}
             myObject.isReservedBy = this.id;
             //reserve the dropspot by object
-            jobArray[2].isReservedBy = myObject;
-            jobArray[2].isFulfilled = true;
+            //jobObj.subZone.isReservedBy = myObject;
+            jobObj.subZone.isFulfilled = true;
             this.addToActions("Picking up "+myObject.constructor.name, 
                 () => this.pickupObject(myObject));
             this.addToActions("Dropping off "+myObject.constructor.name, 
-                () => this.dropoffObject(myObject, jobArray[2]));
+                () => this.dropoffObject(myObject, jobObj.subZone));
         }
-        else if(jobArray[1] == 'plant'){
-            jobArray[0].isReservedBy = this.id;
-            this.addToActions("Planting "+jobArray[0].constructor.name, 
-                () => this.plantObject(jobArray[0]));
+        else if(jobObj.instruction == 'plant'){
+            jobObj.gameObj.isReservedBy = this.id;
+            this.addToActions("Planting "+jobObj.gameObj.constructor.name, 
+                () => this.plantObject(jobObj.gameObj));
         }
-        else if(jobArray[1].split(",")[0] == "construct"){
-            let constructArray = jobArray[1].split(",");
+        else if(jobObj.instruction.split(",")[0] == "construct"){
+            let constructArray = jobObj.instruction.split(",");
             if(constructArray[1]== "Fence"){
                 this.addToActions("Constructing " + constructArray[1], 
-                () => this.constructObject(constructArray[1], jobArray[2]));
+                () => this.constructObject(constructArray[1], jobObj.subZone));
             }
             else{
                 this.addToActions("Constructing " + constructArray[1], 
-                () => this.constructObject(constructArray[1], jobArray[2]));
+                () => this.constructObject(constructArray[1], jobObj.subZone));
             }
         }
     }
@@ -219,7 +223,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                 //if the seed was put there on purpose
                 if(groupItem.isDoingJob){return;}
                 if(groupItem.isReservedBy==curId || groupItem.isReservedBy==''){
-                    tempPickups.push([groupItem, "Pickup"]);
+                    tempPickups.push({gameObj:groupItem, instruction:"Pickup"});
                 }
             });
         });
@@ -238,7 +242,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                     return;
                 }
                 if(groupItem.isReservedBy==curId || groupItem.isReservedBy==''){
-                    tempDestroyables.push([groupItem, "Destroy"]);
+                    tempDestroyables.push({gameObj:groupItem, instruction:"Destroy"});
                 }
             });
         });
@@ -266,7 +270,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                     let myDropSpot = individZone.getDropSpot(item);
                     if(myDropSpot==null){return;}
                     if(item.isReservedBy==curId || item.isReservedBy==''){
-                        tempDroppables.push([item,'Dropoff',myDropSpot]);
+                        tempDroppables.push({gameObj:item,instruction:'Dropoff',subZone:myDropSpot});
                     }
                 }
             }
@@ -497,7 +501,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     
     //Object function
     findObject(objectConstructorName){
-        //If there's an item in inventory
+        //If there's an item in players inventory
         for(let i=0;i<this.inventory.length;i++){
             if(this.inventory[i].constructor.name==objectConstructorName){
                 return this.inventory[i];
