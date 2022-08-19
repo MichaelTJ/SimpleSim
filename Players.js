@@ -66,11 +66,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         //get items by property
         for(let i=0;i<this.propertyZones.length;i++){
             let curPropZone = propertyZones.getChildren()[i];
+            let extraBoundary= 14;
             let selected = globalScene.physics.overlapRect(
-                curPropZone.x-(curPropZone.displayWidth/2),
-                curPropZone.y-(curPropZone.displayHeight/2), 
-                curPropZone.displayWidth,
-                curPropZone.displayHeight);
+                curPropZone.x-(curPropZone.displayWidth/2)-extraBoundary,
+                curPropZone.y-(curPropZone.displayHeight/2)-extraBoundary, 
+                curPropZone.displayWidth+2*extraBoundary,
+                curPropZone.displayHeight+2*extraBoundary);
             //convert to physics group for functions
             for(let i=0;i<selected.length;i++){
                 //things aren't being destroyed properly

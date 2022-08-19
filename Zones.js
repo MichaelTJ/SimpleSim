@@ -128,7 +128,7 @@ class SubZone extends Zone{
             }
             else{
                 if(this.invPlan.job=="interact"){
-                    if(this.invPlan.type=='plant'){
+                    if(this.invPlan.type=='Plant'){
                         return [this.inventory[0],'plant',this];
                     }
                     else if(this.invPlan.type=='mining'){
