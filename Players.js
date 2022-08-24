@@ -100,9 +100,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         //filter out 'find' jobs that don't have a matching object
         //TODO Double check
         for(let i=personalJobs.length-1;i>=0;i--){
+            /*
             if(personalJobs[i].instruction==undefined){
                 console.log('g');
-            }
+            }*/
 
             if(personalJobs[i].instruction.split(",")[0]=="find"){
                 if(!this.findObject(personalJobs[i].type)){
