@@ -1,7 +1,7 @@
 var constructableReqs = [];
 
 var constructables;
-class Constructable extends MyGameObjects{
+class Constructable extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
         this.requirements = [];

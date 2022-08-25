@@ -1,4 +1,4 @@
-class Consumable extends MyGameObjects{
+class Consumable extends MyGameObject{
     constructor(scene, x, y, sprite, owner='') {
         super(scene, x, y, sprite);
     }

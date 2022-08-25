@@ -1,4 +1,4 @@
-class Animal extends MyGameObjects{
+class Animal extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
         this.spawnOnKilled = ['meat'];

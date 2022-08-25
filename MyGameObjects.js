@@ -1,4 +1,6 @@
-class MyGameObjects extends Phaser.Physics.Arcade.Sprite{
+var myGameObjects = [];
+var myGameObjectData = [];
+class MyGameObject extends Phaser.Physics.Arcade.Sprite{
     constructor(scene, x, y, sprite, owner='') {
         super(scene, x, y, sprite);
         globalScene.add.existing(this);
@@ -32,6 +34,7 @@ class MyGameObjects extends Phaser.Physics.Arcade.Sprite{
         for(let i=0;i<this.spawners.length;i++){
             this.spawners[i].selfDestruct();
         }
+        //remove from parent inventory
         if(this.parent){
             if(this.parent.inventory){
                 
@@ -41,12 +44,18 @@ class MyGameObjects extends Phaser.Physics.Arcade.Sprite{
                 }
             }
         }
+        //remove from gameObjects
+        
+        let index = myGameObjects.indexOf(this);
+        if (index > -1) {
+            myGameObjects.splice(index, 1); 
+        }
 
     }
 }
 
 var trees;
-class Tree extends MyGameObjects{
+class Tree extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
         //Can be set to spawn 1 seed before becoming destroyable
@@ -111,7 +120,7 @@ class Tree extends MyGameObjects{
 }
 
 var woods;
-class Wood extends MyGameObjects{
+class Wood extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
         this.isPickupable = true;
@@ -129,7 +138,7 @@ class Wood extends MyGameObjects{
 }
 
 var ores;
-class Ores extends MyGameObjects{
+class Ores extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         sprite = 'ore';
         super(scene, x, y, sprite, owner);
@@ -148,7 +157,7 @@ class Ores extends MyGameObjects{
 } 
 
 var seeds;
-class Seed extends MyGameObjects{
+class Seed extends MyGameObject{
     constructor(scene, x, y, sprite, owner=''){
         super(scene, x, y, sprite, owner);
         this.isPickupable = true;
@@ -227,7 +236,7 @@ class Seed extends MyGameObjects{
 
 
 
-class Spawner extends MyGameObjects{
+class Spawner extends MyGameObject{
     constructor(scene, x, y, sprite, parent, 
         spawnObjectConstructor, maxObjects, minTime, maxTime, spawnRadius){
         super(scene, x, y, sprite);
@@ -281,3 +290,29 @@ class Spawner extends MyGameObjects{
         }
     }
 }
+
+//data needed for player heuristic
+myGameObjectData['stone']={
+    materialReqs:[], 
+    skillReqs:[],
+    constructionMaterialReqs:[],
+    constructionParentReqs:[],
+    value:1,
+    jobType:Labourer.Other,
+    constructor: (scene, x, y, owner)=>{
+        return new Stone(scene, x, y, owner)}
+    };
+class Stone extends MyGameObject{
+    constructor(scene, x, y, owner=''){
+        let sprite = 'ore';
+        super(scene, x, y, sprite, owner);
+        this.curState = MGOState.Pickupable;
+        this.isStackable = true;
+        this.stateMachine = createStateMachine();
+        myGameObjects.add(globalScene.physics.add.existing(this));
+    }
+    getNeed(){
+        return curState;
+    }
+}
+
