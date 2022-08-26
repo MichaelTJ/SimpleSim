@@ -306,13 +306,72 @@ class Stone extends MyGameObject{
     constructor(scene, x, y, owner=''){
         let sprite = 'ore';
         super(scene, x, y, sprite, owner);
-        this.curState = MGOState.Pickupable;
         this.isStackable = true;
         this.stateMachine = createStateMachine();
         myGameObjects.add(globalScene.physics.add.existing(this));
+    }
+    createStateMachine(){
+        return new StateMachine({initial: MGOState.Waiting,
+            flows: [
+                new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InInventory),
+                new Flow(MGOState.InInventory,MGOAction.Drop,MGOState.Waiting),
+                new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InInventory, (reqData)=>{
+                    if(reqData.DropTo.Inventory.length>64){return false;}
+                    return true;
+                }),
+                new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InZone),
+                new Flow(MGOState.InInventory,MGOAction.Steal,MGOState.InInventory),
+                new Flow(MGOState.InZone,MGOAction.Pickup,MGOState.InInventory),
+        
+                new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed),
+                new Flow(MGOState.Any,MGOAction.Use,MGOState.Destroyed)
+            ]
+            }
+        )
+    }
+    interact(reqData, MGOActionType){
+        if(this.stateMachine.checkConditions(MGOActionType)){
+            let transition = this.stateMachine.makeTransition(MGOActionType);
+            if(transition){
+                this.leaveState(reqData, transition.startState);
+                this.enterState(reqData, transition.endState);
+            }
+        };
+    }
+    leaveState(reqData, MGOStateType){
+        switch(MGOStateType){
+            case MGOState.Waiting:
+                break;
+            case MGOState.InInventory:
+                removeFromInventory(reqData.Player, this);
+                break;
+            case MGOState.InZone:
+                removeFromInventory(reqData.SubZone, this);
+                break;
+        }
+    }
+    enterState(reqData, MGOStateType){
+        switch(MGOStateType){
+            case MGOState.Waiting:
+                break;
+            case MGOState.InInventory:
+                reqData.Player.inventory.push(this);
+                break;
+            case MGOState.InZone:
+                reqData.SubZone.inventory.push(this);
+                break;
+        }
     }
     getNeed(){
         return curState;
     }
 }
-
+function removeFromInventory(objWithInventory, element){
+    if(objWithInventory.inventory){
+        //remove from inventory
+        let index = objWithInventory.inventory.indexOf(element);
+        if (index > -1) {
+            objWithInventory.inventory.splice(index, 1); 
+        }
+    }
+}

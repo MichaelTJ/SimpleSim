@@ -12,13 +12,17 @@ class MGOState {
 }
 
 class MGOAction {
-    static Drop = new MGOTransition('Drop');
+    static Drop = new MGOAction('Drop');
     //DropTo implies giving object to another (has inventory)
-    static DropTo = new MGOTransition('DropTo');
-    static Pickup = new MGOTransition('Pickup');
-    static Destroy = new MGOTransition('Destroy');
-    static Work = new MGOTransition('Work');
-    static Use = new MGOTransition('Use');
+    static DropTo = new MGOAction('DropTo');
+    static Pickup = new MGOAction('Pickup');
+    static Destroy = new MGOAction('Destroy');
+    static Work = new MGOAction('Work');
+    static Use = new MGOAction('Use');
+    static Steal = new MGOAction('Steal');
+    constructor(name) {
+      this.name = name;
+    }
 }
 
 /*
@@ -103,22 +107,50 @@ const nextState = wordMachine.transition(
 */
 
 class Flow{
-    constructor(startState, transitionEvent, endState){
+    constructor(startState, transitionEvent, endState, conditions = false){
         this.startState = startState;
         this.transitionEvent = transitionEvent;
         this.endState = endState;
+        this.conditions = conditions;
     }
 }
 
-let resourceFSM = new StateMachine(MGOState.Waiting,
-    {states: [
-        new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InInventory),
-        new Flow(MGOState.InInventory,MGOAction.Drop,MGOState.Waiting),
-        new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InInventory),
-        
 
-        new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed)
 
-    ]
+class StateMachine{
+  constructor(initial, flows){
+    this.curState = initial;
+    this.flows = flows;
+  }
+  can(MGOActionType){
+    for(let i=0;i<this.flows.length;i++){
+      if(this.curState==this.flows[i].startState){
+        if(this.flows[i].transitionEvent==MGOActionType){
+          return true;
+        }
+      }
     }
-)
+  }
+  makeTransition(MGOActionType){
+    for(let i=0;i<this.flows.length;i++){
+      if(this.curState==this.flows[i].startState){
+        if(this.flows[i].transitionEvent==MGOActionType){
+          this.curState=this.flows[i].endState;
+          return this.flows[i];
+        }
+      }
+    }
+  }
+  checkConditions(MGOActionType){
+    for(let i=0;i<this.flows.length;i++){
+      if(this.curState==this.flows[i].startState){
+        if(this.flows[i].transitionEvent==MGOActionType){
+          if(this.flows[i].conditions){
+            return this.flows[i].conditions()};
+          }
+        }
+      }
+    }
+
+  }
+}
