@@ -121,6 +121,7 @@ class StateMachine{
   constructor(initial, flows){
     this.curState = initial;
     this.flows = flows;
+    this.curFlows = [];
   }
   can(MGOActionType){
     for(let i=0;i<this.flows.length;i++){
@@ -131,11 +132,24 @@ class StateMachine{
       }
     }
   }
+  
+  getFlow(MGOActionType){
+    for(let i=0;i<this.flows.length;i++){
+      if(this.curState==this.flows[i].startState){
+        if(this.flows[i].transitionEvent==MGOActionType){
+          //returned flow used by obj for onEnter() and onLeave()
+          return this.flows[i];
+        }
+      }
+    }
+  }
   makeTransition(MGOActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
         if(this.flows[i].transitionEvent==MGOActionType){
           this.curState=this.flows[i].endState;
+          this.curFlows = this.getCurFlows();
+          //returned flow used by obj for onEnter() and onLeave()
           return this.flows[i];
         }
       }
@@ -146,11 +160,20 @@ class StateMachine{
       if(this.curState==this.flows[i].startState){
         if(this.flows[i].transitionEvent==MGOActionType){
           if(this.flows[i].conditions){
-            return this.flows[i].conditions()};
-          }
+            return this.flows[i].conditions()
+          };
         }
       }
     }
-
+  }
+  getCurFlows(){
+    let possibleFlows = [];
+    for(let i=0;i<this.flows.length;i++){
+      if(this.curState==this.flows[i].startState){
+        possibleFlows.push(flows[i]);
+      }
+    }
+    return possibleFlows;
   }
 }
+

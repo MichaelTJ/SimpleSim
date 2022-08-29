@@ -302,12 +302,13 @@ myGameObjectData['stone']={
     constructor: (scene, x, y, owner)=>{
         return new Stone(scene, x, y, owner)}
     };
-class Stone extends MyGameObject{
+class Resource extends MyGameObject{
     constructor(scene, x, y, owner=''){
         let sprite = 'ore';
         super(scene, x, y, sprite, owner);
         this.isStackable = true;
         this.stateMachine = createStateMachine();
+
         myGameObjects.add(globalScene.physics.add.existing(this));
     }
     createStateMachine(){
@@ -322,7 +323,7 @@ class Stone extends MyGameObject{
                 new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InZone),
                 new Flow(MGOState.InInventory,MGOAction.Steal,MGOState.InInventory),
                 new Flow(MGOState.InZone,MGOAction.Pickup,MGOState.InInventory),
-        
+                //not handled yet
                 new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed),
                 new Flow(MGOState.Any,MGOAction.Use,MGOState.Destroyed)
             ]
@@ -330,15 +331,19 @@ class Stone extends MyGameObject{
         )
     }
     interact(reqData, MGOActionType){
-        if(this.stateMachine.checkConditions(MGOActionType)){
-            let transition = this.stateMachine.makeTransition(MGOActionType);
-            if(transition){
-                this.leaveState(reqData, transition.startState);
-                this.enterState(reqData, transition.endState);
-            }
-        };
+        //doesn't actually check transitions yet
+        let proposedFlow = this.stateMachine.getFlow(MGOActionType);
+            //flow.checkConditions
+        if(proposedFlow){
+            this.leaveState(reqData, proposedFlow.startState);
+            this.stateMachine.makeTransition(MGOActionType);
+            this.enterState(reqData, proposedFlow.endState);
+        }
+        
     }
     leaveState(reqData, MGOStateType){
+        //remove from job queue
+        this.removeFromJobQueues();
         switch(MGOStateType){
             case MGOState.Waiting:
                 break;
@@ -361,9 +366,23 @@ class Stone extends MyGameObject{
                 reqData.SubZone.inventory.push(this);
                 break;
         }
+        this.addToJobQueues()
     }
-    getNeed(){
-        return curState;
+    removeFromJobQueues(){
+        if(this.owner){
+            this.owner.removeFromJobQueue(this.stateMachine.curFlows);
+        }
+        else{
+            globalJobs.removeFromJobQueue(this.stateMachine.curFlows);
+        }
+    }
+    addToJobQueues(){
+        if(this.owner){
+            this.owner.addToJobQueue(this.stateMachine.curFlows);
+        }
+        else{
+            globalJobs.addToJobQueue(this.stateMachine.curFlows);
+        }
     }
 }
 function removeFromInventory(objWithInventory, element){
