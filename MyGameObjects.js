@@ -291,7 +291,8 @@ class Spawner extends MyGameObject{
     }
 }
 
-//data needed for player heuristic
+/*
+Eventually want to build from data
 myGameObjectData['stone']={
     materialReqs:[], 
     skillReqs:[],
@@ -300,20 +301,21 @@ myGameObjectData['stone']={
     value:1,
     jobType:Labourer.Other,
     constructor: (scene, x, y, owner)=>{
-        return new Stone(scene, x, y, owner)}
+        return new Resource(scene, x, y, owner)}
     };
+    */
 class Resource extends MyGameObject{
     constructor(scene, x, y, owner=''){
         let sprite = 'ore';
         super(scene, x, y, sprite, owner);
         this.isStackable = true;
-        this.stateMachine = createStateMachine();
-
-        myGameObjects.add(globalScene.physics.add.existing(this));
+        this.stateMachine = this.createStateMachine();
+        this.addToJobQueues();
+        //myGameObjects.add(globalScene.physics.add.existing(this));
     }
     createStateMachine(){
-        return new StateMachine({initial: MGOState.Waiting,
-            flows: [
+        return new StateMachine(MGOState.Waiting,
+            [
                 new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InInventory),
                 new Flow(MGOState.InInventory,MGOAction.Drop,MGOState.Waiting),
                 new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InInventory, (reqData)=>{
@@ -327,7 +329,7 @@ class Resource extends MyGameObject{
                 new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed),
                 new Flow(MGOState.Any,MGOAction.Use,MGOState.Destroyed)
             ]
-            }
+            
         )
     }
     interact(reqData, MGOActionType){
@@ -369,19 +371,20 @@ class Resource extends MyGameObject{
         this.addToJobQueues()
     }
     removeFromJobQueues(){
+        //should I record which job queues this is attached to?
         if(this.owner){
-            this.owner.removeFromJobQueue(this.stateMachine.curFlows);
+            this.owner.jobQueue.removeJobs(this, this.stateMachine.getCurFlows());
         }
         else{
-            globalJobs.removeFromJobQueue(this.stateMachine.curFlows);
+            globalJobQueue.removeJobs(this, this.stateMachine.getCurFlows());
         }
     }
     addToJobQueues(){
         if(this.owner){
-            this.owner.addToJobQueue(this.stateMachine.curFlows);
+            this.owner.jobQueue.addJobs(this, this.stateMachine.getCurFlows());
         }
         else{
-            globalJobs.addToJobQueue(this.stateMachine.curFlows);
+            globalJobQueue.addJobs(this, this.stateMachine.getCurFlows());
         }
     }
 }

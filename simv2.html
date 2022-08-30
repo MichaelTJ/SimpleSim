@@ -9,13 +9,19 @@
             margin: 0;
         }
     </style>
-    <script src="Players.js"></script>
     <script src="MyGameObjects.js"></script>
-    <script src="Zones.js"></script>
+
     <script src="Animals.js"></script>
-    <script src="Consumables.js"></script>
     <script src="Constructable.js"></script>
+    <script src="Consumables.js"></script>
+    <script src="FSM.js"></script>
+    <script src="JobQueue.js"></script>
+    <script src="JobTypes.js"></script>
     <script src="Pathing.js"></script>
+    <script src="Players.js"></script>
+    <script src="Tools.js"></script>
+    <script src="Zones.js"></script>
+
 </head>
 <body>
 
@@ -39,7 +45,7 @@ var config = {
     }
 };
 
-
+//Globals
 var game = new Phaser.Game(config);
 var showDebug = true;
 var score = 0;
@@ -48,7 +54,8 @@ var players;
 var groupsMap;
 var randDist = 30;
 var globalScene;
-var graphics
+var graphics;
+var globalJobQueue = new JobQueue();
 function preload ()
 {
     this.load.image('sky', 'assets/sky.png');
@@ -79,57 +86,63 @@ function preload ()
 
 function create ()
 {
+    mainGame(this);
+    //debugGame(this);
+}
+
+function debugGame(context){
+    
     globalScene = game.scene.scenes[0];
     //  A simple background for our game
-    this.add.image(400, 300, 'sky');
+    context.add.image(400, 300, 'sky');
     groupsMap = new Map()
-
+    
     let numberOfPlayers = 3;
-    players = this.physics.add.group();
+    players = context.physics.add.group();
     groupsMap.set('Player',players);
     for(let i=0;i<numberOfPlayers;i++){
         //ids start at 1 because 0 is falsey and isReservedBy uses ids
-        new Player(this, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
+        new Player(context, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
     }
     
     
-    trees = this.physics.add.group();
+    trees = context.physics.add.group();
     groupsMap.set('Tree',trees);
-    new Tree(this,100,100,'tree');
+    //new Tree(context,100,100,'tree');
     
-    let numberOfTrees = 10;
+    let numberOfTrees = 0;
     for(let i=0;i<numberOfTrees;i++){
-        new Tree(this,Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),'tree');
+        new Tree(context,Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),'tree');
     }
-    woods = this.physics.add.group();
+    woods = context.physics.add.group();
     groupsMap.set('Wood',woods);
     
-    seeds = this.physics.add.group();
+    seeds = context.physics.add.group();
     groupsMap.set('Seed',seeds);
-    new Seed(this,150,150,'seed');
+    //new Seed(context,150,150,'seed');
     
-    propertyZones = this.physics.add.group();
+    propertyZones = context.physics.add.group();
     groupsMap.set('PropertyZone',propertyZones);
-    new PropertyZone(this,100,100,28,28,1);
+    //new PropertyZone(context,100,100,28,28,1);
     //players.getChildren()[0].reservedInventory = ['Seed'];
 
-    collectionZones = this.physics.add.group();
+    collectionZones = context.physics.add.group();
     groupsMap.set('CollectionZone',collectionZones);
-    //new CollectionZone(this,300,300,28 ,28);
+    //new CollectionZone(context,300,300,28 ,28);
     
     
-    new FencedZone(this,500,500,14,14,2);
+    //new FencedZone(context,500,500,14,14,2);
 
     
-    animals = this.physics.add.group();
+    animals = context.physics.add.group();
     groupsMap.set('Animal',animals);
-    new Animal(this,400,400,'cow');
+    //new Animal(context,400,400,'cow');
 
-    constructables = this.physics.add.group();
+    constructables = context.physics.add.group();
     groupsMap.set('Constructable',constructables);
     //trees.getChildren()[0].addSeed();
     
-    pathNodes = this.physics.add.group();
+    pathNodes = context.physics.add.group();
     groupsMap.set('PathNodes',pathNodes);
     //Make a fence line
     
@@ -140,9 +153,78 @@ function create ()
     //let tempFence = new Fence(globalScene, 300, 300, 'fence', 3);
 
     //mining property for player3
-    new PropertyZone(this,400,100,42,28,3,{mining:10});
+    //new PropertyZone(context,400,100,42,28,3,{mining:10}); 
+    let numberOfResources = 10;
+    for(let i=0;i<numberOfResources;i++){
+        new Resource(context,Phaser.Math.Between(0,800), Phaser.Math.Between(0,600));
+    }
+}
 
-            
+
+function mainGame(context){
+    
+    globalScene = game.scene.scenes[0];
+    //  A simple background for our game
+    context.add.image(400, 300, 'sky');
+    groupsMap = new Map()
+    
+    let numberOfPlayers = 3;
+    players = context.physics.add.group();
+    groupsMap.set('Player',players);
+    for(let i=0;i<numberOfPlayers;i++){
+        //ids start at 1 because 0 is falsey and isReservedBy uses ids
+        new Player(context, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
+    }
+    
+    
+    trees = context.physics.add.group();
+    groupsMap.set('Tree',trees);
+    new Tree(context,100,100,'tree');
+    
+    let numberOfTrees = 10;
+    for(let i=0;i<numberOfTrees;i++){
+        new Tree(context,Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),'tree');
+    }
+    woods = context.physics.add.group();
+    groupsMap.set('Wood',woods);
+    
+    seeds = context.physics.add.group();
+    groupsMap.set('Seed',seeds);
+    new Seed(context,150,150,'seed');
+    
+    propertyZones = context.physics.add.group();
+    groupsMap.set('PropertyZone',propertyZones);
+    new PropertyZone(context,100,100,28,28,1);
+    //players.getChildren()[0].reservedInventory = ['Seed'];
+
+    collectionZones = context.physics.add.group();
+    groupsMap.set('CollectionZone',collectionZones);
+    //new CollectionZone(context,300,300,28 ,28);
+    
+    
+    new FencedZone(context,500,500,14,14,2);
+
+    
+    animals = context.physics.add.group();
+    groupsMap.set('Animal',animals);
+    new Animal(context,400,400,'cow');
+
+    constructables = context.physics.add.group();
+    groupsMap.set('Constructable',constructables);
+    //trees.getChildren()[0].addSeed();
+    
+    pathNodes = context.physics.add.group();
+    groupsMap.set('PathNodes',pathNodes);
+    //Make a fence line
+    
+    /*
+    for(let i=150;i<400;i+=14){
+        let tempFence = new Fence(globalScene, 350, i, 'fence', 3)
+    }*/
+    //let tempFence = new Fence(globalScene, 300, 300, 'fence', 3);
+
+    //mining property for player3
+    new PropertyZone(context,400,100,42,28,3,{mining:10}); 
 }
 
 function update ()

@@ -121,7 +121,6 @@ class StateMachine{
   constructor(initial, flows){
     this.curState = initial;
     this.flows = flows;
-    this.curFlows = [];
   }
   can(MGOActionType){
     for(let i=0;i<this.flows.length;i++){
@@ -170,7 +169,7 @@ class StateMachine{
     let possibleFlows = [];
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        possibleFlows.push(flows[i]);
+        possibleFlows.push(this.flows[i]);
       }
     }
     return possibleFlows;

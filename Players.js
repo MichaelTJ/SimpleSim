@@ -17,6 +17,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.isfirs = false;
         this.dodgeyJobTimer;
         this.setupDodgeyTimer();
+
+        this.jobQueue = new JobQueue();
     }
     setupDodgeyTimer(){
         this.dodgeyJobTimer = globalScene.time.addEvent({ 
@@ -54,40 +56,13 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.curActionFunctions[0]();
     }
     clearJobs(){
-        
         this.curActionFunctions = [];
         this.curActions = [];
     }
     checkPersonalJobs(){
         let personalJobs = [];
-        let thisID = this.id;
+        let overlappingObjects = this.getOverlappingPropertiesObjs();
         
-        let overlappingObjects = globalScene.physics.add.group();
-        //get items by property
-        for(let i=0;i<this.propertyZones.length;i++){
-            let curPropZone = propertyZones.getChildren()[i];
-            let extraBoundary= 14;
-            let selected = globalScene.physics.overlapRect(
-                curPropZone.x-(curPropZone.displayWidth/2)-extraBoundary,
-                curPropZone.y-(curPropZone.displayHeight/2)-extraBoundary, 
-                curPropZone.displayWidth+2*extraBoundary,
-                curPropZone.displayHeight+2*extraBoundary);
-            //convert to physics group for functions
-            for(let i=0;i<selected.length;i++){
-                //things aren't being destroyed properly
-                //destroying trees leaves arcanesprite
-                //probably due to the overlapping Objects physics group
-                //globaljobs doesn't have this problem, only personalJobs
-                if(selected[i].gameObject.active){
-                    if(selected[i].gameObject.constructor.name != 'Player' &&
-                    selected[i].gameObject.constructor.name != 'Animal'){
-                        overlappingObjects.add(
-                            selected[i].gameObject
-                        );
-                    }
-                }
-            }
-        }
         personalJobs.push(...this.checkPickupables([overlappingObjects]));
         personalJobs.push(...this.checkDestroyables([overlappingObjects]));
         personalJobs.push(...this.checkDroppables([propertyZones]));
@@ -194,6 +169,38 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                 () => this.constructObject(constructArray[1], jobObj.subZone));
             }
         }
+    }
+
+    getOverlappingPropertiesObjs(){
+        let thisID = this.id;
+        
+        let overlappingObjects = globalScene.physics.add.group();
+        //get items by property
+        for(let i=0;i<this.propertyZones.length;i++){
+            let curPropZone = propertyZones.getChildren()[i];
+            let extraBoundary= 14;
+            let selected = globalScene.physics.overlapRect(
+                curPropZone.x-(curPropZone.displayWidth/2)-extraBoundary,
+                curPropZone.y-(curPropZone.displayHeight/2)-extraBoundary, 
+                curPropZone.displayWidth+2*extraBoundary,
+                curPropZone.displayHeight+2*extraBoundary);
+            //convert to physics group for functions
+            for(let i=0;i<selected.length;i++){
+                //things aren't being destroyed properly
+                //destroying trees leaves arcanesprite
+                //probably due to the overlapping Objects physics group
+                //globaljobs doesn't have this problem, only personalJobs
+                if(selected[i].gameObject.active){
+                    if(selected[i].gameObject.constructor.name != 'Player' &&
+                    selected[i].gameObject.constructor.name != 'Animal'){
+                        overlappingObjects.add(
+                            selected[i].gameObject
+                        );
+                    }
+                }
+            }
+        }
+        return overlappingObjects;
     }
 
     checkPickupables(pickupables, canGetFromZone=false){
