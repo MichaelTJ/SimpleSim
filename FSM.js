@@ -1,9 +1,10 @@
 class MGOState {
     static Waiting = new MGOState('Waiting');
     static Destroyed = new MGOState('Destroyed');
-    static InInventory = new MGOState('InInventory');
-    static InZone = new MGOState('InZone');
+    static InPlayerInv = new MGOState('InPlayerInv');
+    static InZoneInv = new MGOState('InZoneInv');
     //used when an action applies to any state. Eg Destroy
+    //Unused atm
     static Any = new MGOState('Any');
   
     constructor(name) {

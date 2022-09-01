@@ -316,15 +316,15 @@ class Resource extends MyGameObject{
     createStateMachine(){
         return new StateMachine(MGOState.Waiting,
             [
-                new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InInventory),
-                new Flow(MGOState.InInventory,MGOAction.Drop,MGOState.Waiting),
-                new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InInventory, (reqData)=>{
+                new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InPlayerInv),
+                new Flow(MGOState.InPlayerInv,MGOAction.Drop,MGOState.Waiting),
+                new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InPlayerInv, (reqData)=>{
                     if(reqData.DropTo.Inventory.length>64){return false;}
                     return true;
                 }),
-                new Flow(MGOState.InInventory,MGOAction.DropTo,MGOState.InZone),
-                new Flow(MGOState.InInventory,MGOAction.Steal,MGOState.InInventory),
-                new Flow(MGOState.InZone,MGOAction.Pickup,MGOState.InInventory),
+                new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InZoneInv),
+                new Flow(MGOState.InPlayerInv,MGOAction.Steal,MGOState.InPlayerInv),
+                new Flow(MGOState.InZoneInv,MGOAction.Pickup,MGOState.InPlayerInv),
                 //not handled yet
                 new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed),
                 new Flow(MGOState.Any,MGOAction.Use,MGOState.Destroyed)
@@ -349,10 +349,10 @@ class Resource extends MyGameObject{
         switch(MGOStateType){
             case MGOState.Waiting:
                 break;
-            case MGOState.InInventory:
+            case MGOState.InPlayerInv:
                 removeFromInventory(reqData.Player, this);
                 break;
-            case MGOState.InZone:
+            case MGOState.InZoneInv:
                 removeFromInventory(reqData.SubZone, this);
                 break;
         }
@@ -361,10 +361,10 @@ class Resource extends MyGameObject{
         switch(MGOStateType){
             case MGOState.Waiting:
                 break;
-            case MGOState.InInventory:
+            case MGOState.InPlayerInv:
                 reqData.Player.inventory.push(this);
                 break;
-            case MGOState.InZone:
+            case MGOState.InZoneInv:
                 reqData.SubZone.inventory.push(this);
                 break;
         }
@@ -372,16 +372,16 @@ class Resource extends MyGameObject{
     }
     removeFromJobQueues(){
         //should I record which job queues this is attached to?
-        if(this.owner){
-            this.owner.jobQueue.removeJobs(this, this.stateMachine.getCurFlows());
+        if(this.parent){
+            this.parent.jobQueue.removeJobs(this, this.stateMachine.getCurFlows());
         }
         else{
             globalJobQueue.removeJobs(this, this.stateMachine.getCurFlows());
         }
     }
     addToJobQueues(){
-        if(this.owner){
-            this.owner.jobQueue.addJobs(this, this.stateMachine.getCurFlows());
+        if(this.parent){
+            this.parent.jobQueue.addJobs(this, this.stateMachine.getCurFlows());
         }
         else{
             globalJobQueue.addJobs(this, this.stateMachine.getCurFlows());
