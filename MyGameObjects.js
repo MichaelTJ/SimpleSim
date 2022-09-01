@@ -1,5 +1,35 @@
 var myGameObjects = [];
 var myGameObjectData = [];
+
+//stateMachine states and actions
+class MGOState {
+    static Waiting = new MGOState('Waiting');
+    static Destroyed = new MGOState('Destroyed');
+    static InPlayerInv = new MGOState('InPlayerInv');
+    static InZoneInv = new MGOState('InZoneInv');
+    //used when an action applies to any state. Eg Destroy
+    //Unused atm
+    static Any = new MGOState('Any');
+  
+    constructor(name) {
+      this.name = name;
+    }
+}
+
+//interactions from a player
+class MGOAction {
+    static Drop = new MGOAction('Drop');
+    //DropTo implies giving object to another (has inventory)
+    static DropTo = new MGOAction('DropTo');
+    static Pickup = new MGOAction('Pickup');
+    static Destroy = new MGOAction('Destroy');
+    static Work = new MGOAction('Work');
+    static Use = new MGOAction('Use');
+    static Steal = new MGOAction('Steal');
+    constructor(name) {
+      this.name = name;
+    }
+}
 class MyGameObject extends Phaser.Physics.Arcade.Sprite{
     constructor(scene, x, y, sprite, owner='') {
         super(scene, x, y, sprite);
@@ -332,14 +362,23 @@ class Resource extends MyGameObject{
             
         )
     }
+    //duplicate code, should put into fsm.
     interact(reqData, MGOActionType){
         //doesn't actually check transitions yet
         let proposedFlow = this.stateMachine.getFlow(MGOActionType);
-            //flow.checkConditions
+    
         if(proposedFlow){
-            this.leaveState(reqData, proposedFlow.startState);
-            this.stateMachine.makeTransition(MGOActionType);
-            this.enterState(reqData, proposedFlow.endState);
+            let returnData = {}
+            //don't leave the state if it's the same one
+            if(proposedFlow.startState!=proposedFlow.endState){
+                returnData.leaveStateData = this.leaveState(reqData, proposedFlow.startState);
+                this.stateMachine.makeTransition(ActionType);
+            }
+            returnData.enterStateData = this.enterState(reqData, proposedFlow.endState);
+            return returnData;
+        }
+        else{
+            return null;
         }
         
     }
