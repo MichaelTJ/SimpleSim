@@ -1,7 +1,7 @@
 class Flow{
-    constructor(startState, transitionEvent, endState, curPossible = () => {return true}){
+    constructor(startState, transitionAction, endState, curPossible = () => {return true}){
         this.startState = startState;
-        this.transitionEvent = transitionEvent;
+        this.transitionAction = transitionAction;
         this.endState = endState;
         this.curPossible = curPossible;
     }
@@ -16,7 +16,7 @@ class StateMachine{
   can(ActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.flows[i].transitionEvent==ActionType){
+        if(this.flows[i].transitionAction==ActionType){
           return true;
         }
       }
@@ -26,7 +26,7 @@ class StateMachine{
   getFlow(ActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.flows[i].transitionEvent==ActionType){
+        if(this.flows[i].transitionAction==ActionType){
           if(flows[i].curPossible()){
             //returned flow used by obj for onEnter() and onLeave()
             return this.flows[i];
@@ -41,7 +41,7 @@ class StateMachine{
   makeTransition(ActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.flows[i].transitionEvent==ActionType){
+        if(this.flows[i].transitionAction==ActionType){
           this.curState=this.flows[i].endState;
           this.curFlows = this.getCurFlows();
           //returned flow used by obj for onEnter() and onLeave()
@@ -53,7 +53,7 @@ class StateMachine{
   checkCurPossible(ActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.flows[i].transitionEvent==ActionType){
+        if(this.flows[i].transitionAction==ActionType){
           return this.flows[i].curPossible()
         }
       }

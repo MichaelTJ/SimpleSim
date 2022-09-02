@@ -371,10 +371,10 @@ class Resource extends MyGameObject{
             let returnData = {}
             //don't leave the state if it's the same one
             if(proposedFlow.startState!=proposedFlow.endState){
-                returnData.leaveStateData = this.leaveState(reqData, proposedFlow.startState);
+                returnData.leaveStateData = this.leaveState(reqData, proposedFlow);
                 this.stateMachine.makeTransition(ActionType);
             }
-            returnData.enterStateData = this.enterState(reqData, proposedFlow.endState);
+            returnData.enterStateData = this.enterState(reqData, proposedFlow);
             return returnData;
         }
         else{
@@ -382,11 +382,12 @@ class Resource extends MyGameObject{
         }
         
     }
-    leaveState(reqData, MGOStateType){
+    leaveState(reqData, flow){
         //remove from job queue
         this.removeFromJobQueues();
-        switch(MGOStateType){
+        switch(flow.startState){
             case MGOState.Waiting:
+                //another switch needed here
                 break;
             case MGOState.InPlayerInv:
                 removeFromInventory(reqData.Player, this);
