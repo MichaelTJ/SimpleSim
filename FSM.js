@@ -1,9 +1,12 @@
 class Flow{
-    constructor(startState, transitionAction, endState, curPossible = () => {return true}){
+    constructor(startState, transitionAction, endState, 
+      checkPossible = () => {return true},
+      transitionFunc = () => {}){
         this.startState = startState;
         this.transitionAction = transitionAction;
         this.endState = endState;
-        this.curPossible = curPossible;
+        this.checkPossible = checkPossible;
+        this.transitionFunc = transitionFunc;
     }
 }
 
@@ -27,7 +30,7 @@ class StateMachine{
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
         if(this.flows[i].transitionAction==ActionType){
-          if(flows[i].curPossible()){
+          if(flows[i].checkPossible()){
             //returned flow used by obj for onEnter() and onLeave()
             return this.flows[i];
           }
@@ -50,11 +53,11 @@ class StateMachine{
       }
     }
   }
-  checkCurPossible(ActionType){
+  checkPossible(ActionType){
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
         if(this.flows[i].transitionAction==ActionType){
-          return this.flows[i].curPossible()
+          return this.flows[i].checkPossible()
         }
       }
     }
@@ -63,7 +66,7 @@ class StateMachine{
     let possibleFlows = [];
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.possibleFlows.curPossible()){
+        if(this.possibleFlows.checkPossible()){
           possibleFlows.push(this.flows[i]);
         }
       }

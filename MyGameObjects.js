@@ -346,12 +346,27 @@ class Resource extends MyGameObject{
     createStateMachine(){
         return new StateMachine(MGOState.Waiting,
             [
-                new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InPlayerInv),
-                new Flow(MGOState.InPlayerInv,MGOAction.Drop,MGOState.Waiting),
-                new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InPlayerInv, (reqData)=>{
-                    if(reqData.DropTo.Inventory.length>64){return false;}
-                    return true;
-                }),
+                new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InPlayerInv,
+                    transitionFunc = (reqData) => {
+                        removeFromInventory(this.parent, this);
+                        this.parent = reqData.PickupToObj;
+                        this.parent.inventory.push(this);
+                    }),
+                    //drop to ground
+                new Flow(MGOState.InPlayerInv,MGOAction.Drop,MGOState.Waiting,
+                    transitionFunc = (reqData) => {
+                        removeFromInventory(this.parent, this);
+                        this.parent = '';
+                    }),
+                new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InPlayerInv, 
+                    checkPossible = (reqData)=>{
+                        if(reqData.DropToObj.Inventory.length>64){return false;}
+                        return true;},
+                    transitionFunc = (reqData) => {
+                        removeFromInventory(this.parent, this);
+                        this.parent = reqData.DropToObj;
+                        this.parent.inventory.push(this);
+                    }),
                 new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InZoneInv),
                 new Flow(MGOState.InPlayerInv,MGOAction.Steal,MGOState.InPlayerInv),
                 new Flow(MGOState.InZoneInv,MGOAction.Pickup,MGOState.InPlayerInv),
@@ -369,11 +384,8 @@ class Resource extends MyGameObject{
     
         if(proposedFlow){
             let returnData = {}
-            //don't leave the state if it's the same one
-            if(proposedFlow.startState!=proposedFlow.endState){
-                returnData.leaveStateData = this.leaveState(reqData, proposedFlow);
-                this.stateMachine.makeTransition(ActionType);
-            }
+            returnData.leaveStateData = this.leaveState(reqData, proposedFlow);
+            this.stateMachine.makeTransition(ActionType);
             returnData.enterStateData = this.enterState(reqData, proposedFlow);
             return returnData;
         }
@@ -390,22 +402,22 @@ class Resource extends MyGameObject{
                 //another switch needed here
                 break;
             case MGOState.InPlayerInv:
-                removeFromInventory(reqData.Player, this);
                 break;
             case MGOState.InZoneInv:
-                removeFromInventory(reqData.SubZone, this);
                 break;
         }
     }
     enterState(reqData, MGOStateType){
         switch(MGOStateType){
             case MGOState.Waiting:
+                this.active = true;
                 break;
             case MGOState.InPlayerInv:
-                reqData.Player.inventory.push(this);
+                this.alpha = 0;
+                this.active = false;
                 break;
             case MGOState.InZoneInv:
-                reqData.SubZone.inventory.push(this);
+                this.active = true;
                 break;
         }
         this.addToJobQueues()
