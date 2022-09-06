@@ -19,6 +19,7 @@
     <script src="JobTypes.js"></script>
     <script src="Pathing.js"></script>
     <script src="Players.js"></script>
+    <script src="Players2.js"></script>
     <script src="Tools.js"></script>
     <script src="Zones.js"></script>
 
@@ -102,7 +103,7 @@ function debugGame(context){
     groupsMap.set('Player',players);
     for(let i=0;i<numberOfPlayers;i++){
         //ids start at 1 because 0 is falsey and isReservedBy uses ids
-        new Player(context, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
+        new Player2(context, Phaser.Math.Between(0,800), Phaser.Math.Between(0,600),i+1);
     }
     
     

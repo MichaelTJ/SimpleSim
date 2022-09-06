@@ -347,26 +347,31 @@ class Resource extends MyGameObject{
         return new StateMachine(MGOState.Waiting,
             [
                 new Flow(MGOState.Waiting,MGOAction.Pickup,MGOState.InPlayerInv,
-                    transitionFunc = (reqData) => {
+                    undefined,
+                    (reqData) => {
                         removeFromInventory(this.parent, this);
                         this.parent = reqData.PickupToObj;
                         this.parent.inventory.push(this);
                     }),
                     //drop to ground
                 new Flow(MGOState.InPlayerInv,MGOAction.Drop,MGOState.Waiting,
-                    transitionFunc = (reqData) => {
+                    undefined,
+                    (reqData) => {
                         removeFromInventory(this.parent, this);
                         this.parent = '';
                     }),
                 new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InPlayerInv, 
-                    checkPossible = (reqData)=>{
+                    //checkPossible
+                    (reqData)=>{
                         if(reqData.DropToObj.Inventory.length>64){return false;}
                         return true;},
-                    transitionFunc = (reqData) => {
+                    //transitionFunc
+                    (reqData) => {
                         removeFromInventory(this.parent, this);
                         this.parent = reqData.DropToObj;
                         this.parent.inventory.push(this);
                     }),
+                    //both things need access to 
                 new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InZoneInv),
                 new Flow(MGOState.InPlayerInv,MGOAction.Steal,MGOState.InPlayerInv),
                 new Flow(MGOState.InZoneInv,MGOAction.Pickup,MGOState.InPlayerInv),
@@ -379,7 +384,7 @@ class Resource extends MyGameObject{
     }
     //duplicate code, should put into fsm.
     interact(reqData, MGOActionType){
-        //doesn't actually check transitions yet
+        //doesn't check transitions yet
         let proposedFlow = this.stateMachine.getFlow(MGOActionType);
     
         if(proposedFlow){
@@ -433,10 +438,10 @@ class Resource extends MyGameObject{
     }
     addToJobQueues(){
         if(this.parent){
-            this.parent.jobQueue.addJobs(this, this.stateMachine.getCurFlows());
+            this.parent.jobQueue.appendJobs(this, this.stateMachine.getCurFlows());
         }
         else{
-            globalJobQueue.addJobs(this, this.stateMachine.getCurFlows());
+            globalJobQueue.appendJobs(this, this.stateMachine.getCurFlows());
         }
     }
 }

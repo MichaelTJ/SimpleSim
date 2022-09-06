@@ -66,7 +66,7 @@ class StateMachine{
     let possibleFlows = [];
     for(let i=0;i<this.flows.length;i++){
       if(this.curState==this.flows[i].startState){
-        if(this.possibleFlows.checkPossible()){
+        if(this.flows[i].checkPossible()){
           possibleFlows.push(this.flows[i]);
         }
       }
