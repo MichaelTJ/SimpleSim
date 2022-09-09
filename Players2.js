@@ -1,5 +1,5 @@
 class Player2 extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, id) {
+    constructor(scene, x, y) {
         super(scene, x, y, "ball");
         globalScene.add.existing(this);
         this.defaultSpeed = 200;
@@ -7,8 +7,9 @@ class Player2 extends Phaser.Physics.Arcade.Sprite {
         this.curActions = [];
         //this.hunger = 50;
         //this.hungerRate = 0.1;
-        this.id = id;
-        this.followText = globalScene.add.text(0, 0, id);
+        //from objectIdSingleton
+        this.id = ObjectId.getNextId();
+        this.followText = globalScene.add.text(0, 0, this.id);
         this.curActionFunctions = [];
         players.add(globalScene.physics.add.existing(this));
         //this.reservedInventory = [];
@@ -87,9 +88,23 @@ class Player2 extends Phaser.Physics.Arcade.Sprite {
 
     }
     checkGlobalJobs(){
-        //let curJob = globalJobQueue.getRandom();
-        //this.doJob(globalJobs[randJob]);
-
+        //get all the jobs
+        let possJobs = globalJobQueue.getJobs();
+        let keys = Object.keys(possJobs);
+        if(keys.length==null){return}
+        let index = keys.length * Math.random() << 0;
+        let job = possJobs[keys[index]];
+        if(job.obj.isReservedBy){
+            //shouldn't run
+            return null;
+        }
+        //reserve an object
+        job.obj.isReservedBy = this.id;
+        let flowIndex = job.flows.length * Math.random() << 0;
+        let curFlow = job.flows[flowIndex];
+    
+        this.doJob(job.obj, job.flows[flowIndex]);
+        /*
         let globalJobs = [];
         //super wierd - iterate below can't see 'this'
         //but it can see it when i create thisID
@@ -108,30 +123,34 @@ class Player2 extends Phaser.Physics.Arcade.Sprite {
             let randJob = Phaser.Math.Between(0,globalJobs.length-1);
 
             this.doJob(globalJobs[randJob]);
-        }
+        }*/
     }
 
-    doJob(jobObj){
-
-        //console.log(globalJobs);
-        if(jobObj.instruction == "Pickup"){
-            jobObj.gameObj.isReservedBy = this.id;
-            this.addToActions("Picking up "+jobObj.constructor.name, 
-                () => this.pickupObject(jobObj.gameObj));
+    doJob(jobObj, flow){
+        switch (flow.transitionAction.name){
+            case 'Pickup':
+                this.addToActions("Picking up "+jobObj.constructor.name, 
+                    () => this.pickupObject(jobObj));
+            case 'Destroy':
+                this.addToActions("Destroying "+jobObj.constructor.name, 
+                    () => this.destroyObject(jobObj));
+            case 'Drop':
+                break;
+            default:
+                break;
+            //unreachable - not implemented yet.
+            case 'DropTo':
+                //reserve the dropspot by object
+                jobObj.subZone.isReservedBy = jobObj;
+                this.addToActions("Dropping off "+jobObj.constructor.name, 
+                    () => this.dropoffObject(jobObj, jobObj.subZone));
+                break;
+            case 'Work':
+                break;
+            case 'Use':
+                break;
         }
-        else if(jobObj.instruction == "Destroy"){
-            jobObj.gameObj.isReservedBy = this.id;
-            this.addToActions("Destroying "+jobObj.gameObj.constructor.name, 
-                () => this.destroyObject(jobObj.gameObj));
-        }
-        else if(jobObj.instruction == "Dropoff"){
-            //reserve the dropspot by object
-            jobObj.subZone.isReservedBy = jobObj.gameObj;
-            //reserve the inventory item
-            jobObj.gameObj.isReservedBy = this.id;
-            this.addToActions("Dropping off "+jobObj.gameObj.constructor.name, 
-                () => this.dropoffObject(jobObj.gameObj, jobObj.subZone));
-        }
+        /*
         else if(jobObj.instruction == "find,pickup,dropoff"){
             
             let myObject = this.findObject(jobObj.type);
@@ -161,7 +180,7 @@ class Player2 extends Phaser.Physics.Arcade.Sprite {
                 this.addToActions("Constructing " + constructArray[1], 
                 () => this.constructObject(constructArray[1], jobObj.subZone));
             }
-        }
+        }*/
     }
 
     getOverlappingPropertiesObjs(){

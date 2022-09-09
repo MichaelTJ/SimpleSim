@@ -25,7 +25,6 @@ class MGOAction {
     static Destroy = new MGOAction('Destroy');
     static Work = new MGOAction('Work');
     static Use = new MGOAction('Use');
-    static Steal = new MGOAction('Steal');
     constructor(name) {
       this.name = name;
     }
@@ -338,7 +337,8 @@ class Resource extends MyGameObject{
     constructor(scene, x, y, owner=''){
         let sprite = 'ore';
         super(scene, x, y, sprite, owner);
-        this.isStackable = true;
+        this.isReservedBy = 0;
+        this.id = ObjectId.getNextId();
         this.stateMachine = this.createStateMachine();
         this.addToJobQueues();
         //myGameObjects.add(globalScene.physics.add.existing(this));
@@ -373,7 +373,6 @@ class Resource extends MyGameObject{
                     }),
                     //both things need access to 
                 new Flow(MGOState.InPlayerInv,MGOAction.DropTo,MGOState.InZoneInv),
-                new Flow(MGOState.InPlayerInv,MGOAction.Steal,MGOState.InPlayerInv),
                 new Flow(MGOState.InZoneInv,MGOAction.Pickup,MGOState.InPlayerInv),
                 //not handled yet
                 new Flow(MGOState.Any,MGOAction.Destroy,MGOState.Destroyed),
